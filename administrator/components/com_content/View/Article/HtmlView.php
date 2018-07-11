@@ -37,13 +37,6 @@ class HtmlView extends BaseHtmlView
 	protected $item;
 
 	/**
-	 * The model state
-	 *
-	 * @var  object
-	 */
-	protected $state;
-
-	/**
 	 * The actions the user is authorised to perform
 	 *
 	 * @var  \JObject
@@ -56,6 +49,14 @@ class HtmlView extends BaseHtmlView
 	 * @var  string
 	 */
 	protected $eName;
+
+	/**
+	 * Component parameters
+	 *
+	 * @var    mixed
+	 * @since  __DEPLOY_VERSION__
+	 */
+	protected $componentParams;
 
 	/**
 	 * Execute and display a template script.
@@ -75,7 +76,7 @@ class HtmlView extends BaseHtmlView
 
 		$this->form  = $this->get('Form');
 		$this->item  = $this->get('Item');
-		$this->state = $this->get('State');
+		$this->componentParams = $this->get('ComponentParams');
 		$this->canDo = \JHelperContent::getActions('com_content', 'article', $this->item->id);
 
 		// Check for errors.
@@ -171,7 +172,7 @@ class HtmlView extends BaseHtmlView
 					}
 				);
 
-			if (\JComponentHelper::isEnabled('com_contenthistory') && $this->state->params->get('save_history', 0) && $itemEditable)
+			if (\JComponentHelper::isEnabled('com_contenthistory') && $this->componentParams->get('save_history', 0) && $itemEditable)
 			{
 				$toolbar->versions('com_content.article', $this->item->id);
 			}

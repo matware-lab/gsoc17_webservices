@@ -12,8 +12,9 @@ namespace Joomla\Component\Content\Administrator\Model;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Entity\Category;
+use Joomla\CMS\Entity\Content;
 use Joomla\CMS\Entity\Featured;
-use Joomla\CMS\MVC\EntityModel\AdminEntityModel;
+use Joomla\CMS\Form\Form;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -21,7 +22,7 @@ use Joomla\Utilities\ArrayHelper;
  *
  * @since  1.6
  */
-class ArticleModel extends AdminEntityModel
+class ArticleModel extends Content
 {
 	/**
 	 * The prefix to use with controller messages.
@@ -48,13 +49,6 @@ class ArticleModel extends AdminEntityModel
 	protected $associationsContext = 'com_content.item';
 
 	/**
-	 * The Model associated entity class. MUST be defined for each model.
-	 *
-	 * @var string
-	 */
-	protected $entityClass = 'Joomla\CMS\Entity\Content';
-
-	/**
 	 * Method to test whether a record can be deleted.
 	 *
 	 * @param   object  $record  A record object.
@@ -62,6 +56,7 @@ class ArticleModel extends AdminEntityModel
 	 * @return  boolean  True if allowed to delete the record. Defaults to the permission set in the component.
 	 *
 	 * @since   1.6
+	 * @throws \Exception
 	 */
 	protected function canDelete($record)
 	{
@@ -114,9 +109,10 @@ class ArticleModel extends AdminEntityModel
 	 * @param   array    $data      Data for the form.
 	 * @param   boolean  $loadData  True if the form is to load its own data (default case), false if not.
 	 *
-	 * @return  \JForm|boolean  A \JForm object on success, false on failure
+	 * @return  Form|boolean  A Form object on success, false on failure
 	 *
 	 * @since   1.6
+	 * @throws \Exception
 	 */
 	public function getForm($data = array(), $loadData = true)
 	{
@@ -137,9 +133,9 @@ class ArticleModel extends AdminEntityModel
 		$id = $jinput->get('a_id', $jinput->get('id', 0));
 
 		// Determine correct permissions to check.
-		if ($this->getState('article.id'))
+		if ($this->getPrimaryKeyValue())
 		{
-			$id = $this->getState('article.id');
+			$id = $this->getPrimaryKeyValue();
 
 			// Existing record. Can only edit in selected categories.
 			$form->setFieldAttribute('catid', 'action', 'core.edit');
@@ -181,7 +177,7 @@ class ArticleModel extends AdminEntityModel
 		$assoc = \JLanguageAssociations::isEnabled();
 
 		// Check if article is associated
-		if ($this->getState('article.id') && $app->isClient('site') && $assoc)
+		if ($this->getPrimaryKeyValue() && $app->isClient('site') && $assoc)
 		{
 			$associations = \JLanguageAssociations::getAssociations('com_content', '#__content', 'com_content.item', $id);
 
@@ -214,19 +210,23 @@ class ArticleModel extends AdminEntityModel
 
 		if (empty($data))
 		{
-			$data = $this->getItem()->toArray();
+			$item = $this->getItem();
 
+			if ($item)
+			{
+				$data = $item->toArray();
+			}
 			// Pre-select some filters (Status, Category, Language, Access) in edit form if those have been selected in Article Manager: Articles
-			if ($this->getState('article.id') == 0)
+			else
 			{
 				$filters = (array) $app->getUserState('com_content.articles.filter');
-				$data->state = $app->input->getInt(
+				$data['state'] = $app->input->getInt(
 					'state',
 					((isset($filters['published']) && $filters['published'] !== '') ? $filters['published'] : null)
 				);
-				$data->catid = $app->input->getInt('catid', (!empty($filters['category_id']) ? $filters['category_id'] : null));
-				$data->language = $app->input->getString('language', (!empty($filters['language']) ? $filters['language'] : null));
-				$data->access = $app->input->getInt(
+				$data['catid'] = $app->input->getInt('catid', (!empty($filters['category_id']) ? $filters['category_id'] : null));
+				$data['language'] = $app->input->getString('language', (!empty($filters['language']) ? $filters['language'] : null));
+				$data['access'] = $app->input->getInt(
 					'access', (!empty($filters['access']) ? $filters['access'] : \JFactory::getConfig()->get('access'))
 				);
 			}
@@ -240,7 +240,7 @@ class ArticleModel extends AdminEntityModel
 	/**
 	 * Method to validate the form data.
 	 *
-	 * @param   JForm   $form   The form to validate against.
+	 * @param   Form   $form   The form to validate against.
 	 * @param   array   $data   The data to validate.
 	 * @param   string  $group  The name of the field group to validate.
 	 *
@@ -249,6 +249,7 @@ class ArticleModel extends AdminEntityModel
 	 * @see     JFormRule
 	 * @see     JFilterInput
 	 * @since   3.7.0
+	 * @throws \Exception
 	 */
 	public function validate($form, $data, $group = null)
 	{
@@ -299,7 +300,7 @@ class ArticleModel extends AdminEntityModel
 		// Cast catid to integer for comparison
 		$catid = (int) $data['catid'];
 
-		$category = (new Category($this->entity->getDb()))->find($catid);
+		$category = (new Category($this->getDb()))->find($catid);
 
 		// Check if New Category exists
 		if ($catid > 0 && !$category)
@@ -316,7 +317,7 @@ class ArticleModel extends AdminEntityModel
 				throw new \Exception("user cannot create category");
 			}
 
-			$category = new Category($this->entity->getDb());
+			$category = new Category($this->getDb());
 
 			$category->title = $data['catid'];
 			$category->parent_id = 1;
@@ -365,7 +366,7 @@ class ArticleModel extends AdminEntityModel
 					$data['alias'] = \JFilterOutput::stringURLSafe($data['title']);
 				}
 
-				if ($rows = $this->entity->where(['alias' => $data['alias'], 'catid' => $data['catid']])->get([$category->getPrimaryKey()]))
+				if ($rows = $this->where(['alias' => $data['alias'], 'catid' => $data['catid']])->get([$category->getPrimaryKey()]))
 				{
 					$msg = \JText::_('COM_CONTENT_SAVE_WARNING');
 				}
@@ -388,7 +389,7 @@ class ArticleModel extends AdminEntityModel
 		{
 			if (isset($data['featured']))
 			{
-				$this->featured($this->entity->id, $data['featured']);
+				$this->featured($this->id, $data['featured']);
 			}
 
 			return true;
@@ -417,7 +418,7 @@ class ArticleModel extends AdminEntityModel
 			throw new \Exception(\JText::_('COM_CONTENT_NO_ITEM_SELECTED'));
 		}
 
-		$db = $this->entity->getDb();
+		$db = $this->getDb();
 		$query = $db->getQuery(true)
 			->update($db->quoteName('#__content'))
 			->set('featured = ' . (int) $value)
@@ -469,7 +470,7 @@ class ArticleModel extends AdminEntityModel
 			}
 		}
 
-		$this->reorderAll(new Featured($this->entity->getDb()));
+		$this->reorderAll(new Featured($this->getDb()));
 
 		$this->cleanCache();
 
@@ -491,9 +492,9 @@ class ArticleModel extends AdminEntityModel
 	}
 
 	/**
-	 * Allows preprocessing of the \JForm object.
+	 * Allows preprocessing of the Form object.
 	 *
-	 * @param   \JForm $form  The form object
+	 * @param   Form   $form  The form object
 	 * @param   array  $data  The data to be merged into the form object
 	 * @param   string $group The plugin group to be executed
 	 *
@@ -502,7 +503,7 @@ class ArticleModel extends AdminEntityModel
 	 * @since   3.0
 	 * @throws \Exception
 	 */
-	protected function preprocessForm(\JForm $form, $data, $group = 'content')
+	protected function preprocessForm(Form $form, $data, $group = 'content')
 	{
 		if ($this->canCreateCategory())
 		{
@@ -552,6 +553,7 @@ class ArticleModel extends AdminEntityModel
 	 * @return  void
 	 *
 	 * @since   1.6
+	 * @throws \Exception
 	 */
 	protected function cleanCache($group = null, $client_id = 0)
 	{
@@ -598,14 +600,14 @@ class ArticleModel extends AdminEntityModel
 	 * @since   3.7.0
 	 * @throws \Exception
 	 */
-	public function delete(&$pks)
+	public function deleteRows(&$pks)
 	{
-		$return = parent::delete($pks);
+		$return = parent::deleteRows($pks);
 
 		if ($return)
 		{
 			// Now check to see if this articles was featured if so delete it from the #__content_frontpage table
-			$db = $this->entity->getDb();
+			$db = $this->getDb();
 			$query = $db->getQuery(true)
 				->delete($db->quoteName('#__content_frontpage'))
 				->where('content_id IN (' . implode(',', $pks) . ')');

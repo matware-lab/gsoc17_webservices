@@ -47,13 +47,6 @@ class HtmlView extends BaseHtmlView
 	protected $pagination;
 
 	/**
-	 * The model state
-	 *
-	 * @var  \JObject
-	 */
-	protected $state;
-
-	/**
 	 * Form object for search filters
 	 *
 	 * @var  \JForm
@@ -83,6 +76,16 @@ class HtmlView extends BaseHtmlView
 	protected $f_levels;
 
 	/**
+	 * @var array
+	 */
+	protected $list;
+
+	/**
+	 * @var array
+	 */
+	protected $filter;
+
+	/**
 	 * Display the view
 	 *
 	 * @param   string  $tpl  The name of the template file to parse; automatically searches through the template paths.
@@ -98,7 +101,8 @@ class HtmlView extends BaseHtmlView
 
 		$this->items         = $this->get('Items');
 		$this->pagination    = $this->get('Pagination');
-		$this->state         = $this->get('State');
+		$this->list          = $this->get('List');
+		$this->filter        = $this->get('Filter');
 		$this->authors       = $this->get('Authors');
 		$this->filterForm    = $this->get('FilterForm');
 		$this->activeFilters = $this->get('ActiveFilters');
@@ -153,7 +157,7 @@ class HtmlView extends BaseHtmlView
 	 */
 	protected function addToolbar()
 	{
-		$canDo = \JHelperContent::getActions('com_content', 'category', $this->state->get('filter.category_id'));
+		$canDo = \JHelperContent::getActions('com_content', 'category', $this->filter['category_id']);
 		$user  = \JFactory::getUser();
 
 		// Get the toolbar object instance
@@ -198,7 +202,7 @@ class HtmlView extends BaseHtmlView
 				->listCheck(true);
 		}
 
-		if ($this->state->get('filter.published') == -2 && $canDo->get('core.delete'))
+		if ($this->filter['published'] == -2 && $canDo->get('core.delete'))
 		{
 			$toolbar->delete('articles.delete')
 				->text('JTOOLBAR_EMPTY_TRASH')

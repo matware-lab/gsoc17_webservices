@@ -19,10 +19,8 @@ defined('JPATH_PLATFORM') or die;
  *
  * @since  __DEPLOY_VERSION__
  */
-class Content extends Model
+class Content extends CMSModel
 {
-	use EntityTableTrait;
-
 	/**
 	 * The table associated with the model.
 	 *
@@ -79,7 +77,7 @@ class Content extends Model
 	 * Get the featured for the current user.
 	 * @return Relation
 	 */
-	public function featured()
+	public function feature()
 	{
 		return $this->hasOne('Joomla\CMS\Entity\Category\Featured');
 	}

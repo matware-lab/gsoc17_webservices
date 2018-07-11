@@ -6,19 +6,14 @@
  * @license    GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-namespace Joomla\CMS\MVC\EntityModel;
+namespace Joomla\CMS\MVC\Entity;
 
 defined('JPATH_PLATFORM') or die;
 
 use JForm;
-use Joomla\CMS\Event\AbstractEvent;
-use Joomla\CMS\MVC\EntityModel\BaseEntityModel;
-use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Form\FormFactoryAwareInterface;
 use Joomla\CMS\Form\FormFactoryAwareTrait;
 use Joomla\CMS\Form\FormFactoryInterface;
-use Joomla\Event\DispatcherAwareTrait;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -29,10 +24,9 @@ use Joomla\Utilities\ArrayHelper;
  * @see    \JFormRule
  * @since  1.6
  */
-abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwareInterface
+trait FormModelTrait
 {
 	use FormFactoryAwareTrait;
-	use DispatcherAwareTrait;
 
 	/**
 	 * Array of form objects.
@@ -43,112 +37,67 @@ abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwa
 	protected $_forms = array();
 
 	/**
-	 * Maps events to plugin groups.
+	 * Method override to check-in a record or an array of record
 	 *
-	 * @var    array
-	 * @since  3.6
-	 */
-	protected $events_map = null;
-
-	/**
-	 * Constructor
+	 * @param   mixed  $pks  The ID of the primary key or an array of IDs
 	 *
-	 * @param   array                 $config       An array of configuration options (name, state, dbo, table_path, ignore_request).
-	 * @param   MVCFactoryInterface   $factory      The factory.
-	 * @param   FormFactoryInterface  $formFactory  The form factory.
-	 *
-	 * @since   3.6
-	 * @throws  \Exception
-	 */
-	public function __construct($config = array(), MVCFactoryInterface $factory = null, FormFactoryInterface $formFactory = null)
-	{
-		$config['events_map'] = $config['events_map'] ?? array();
-
-		$this->events_map = array_merge(
-			array(
-				'validate' => 'content',
-			),
-			$config['events_map']
-		);
-
-		parent::__construct($config, $factory);
-
-		$this->setFormFactory($formFactory);
-
-		$dispatcher = \JFactory::getApplication()->getDispatcher();
-		$this->setDispatcher($dispatcher);
-	}
-
-	/**
-	 * Method to checkin a row.
-	 *
-	 * @param   integer  $pk  The numeric id of the primary key.
-	 *
-	 * @return  boolean  False on failure or error, true otherwise.
+	 * @return  integer|boolean  Boolean false if there is an error, otherwise the count of records checked in.
 	 *
 	 * @since   1.6
-	 * @throws  \UnexpectedValueException
+	 * @throws \Exception
+	 * @todo do we want to make this resilient to errors (throw exceptions at the end of the execution?)
 	 */
-	public function checkin($pk = null)
+	public function checkin($pks = array())
 	{
-		// Only attempt to check the row in if it exists.
-		if ($pk)
+		$pks = (array) $pks;
+		$count = 0;
+
+		if (empty($pks))
 		{
-			if (!$this->entity->load($pk))
-			{
-				// TODO throw error here
-				// $this->setError($table->getError());
-				// throw new \UnexpectedValueException('Null primary key not allowed.');
-				return false;
-			}
-
-			// If there is no checked_out or checked_out_time field, just return true.
-			if (!$this->entity->hasField('checked_out') || !$this->entity->hasField('checked_out_time'))
-			{
-				return true;
-			}
-
-			$user = \JFactory::getUser();
-
-			// Check if this is the user having previously checked out the row.
-			if ($this->entity->checked_out > 0 && $this->entity->checked_out != $user->get('id')
-				&& !$user->authorise('core.admin', 'com_checkin'))
-			{
-				// TODO throw error here
-				// $this->setError(\JText::_('JLIB_APPLICATION_ERROR_CHECKIN_USER_MISMATCH'));
-
-				return false;
-			}
-
-			// Pre-processing by observers
-			$event = AbstractEvent::create(
-				'onTableBeforeCheckin',
-				array(
-					'subject'	=> $this,
-					'pk'		=> $pk,
-				)
-			);
-			$this->getDispatcher()->dispatch('onTableBeforeCheckin', $event);
-
-			$this->entity->checked_out = '0';
-			$this->entity->checked_out_time = $this->entity->getDb()->getNullDate();
-
-			$this->entity->persist();
-
-			// Post-processing by observers
-			$event = AbstractEvent::create(
-				'onTableAfterCheckin',
-				array(
-					'subject'	=> $this,
-					'pk'		=> $pk,
-				)
-			);
-			$this->getDispatcher()->dispatch('onTableAfterCheckin', $event);
-
-			return true;
+			$pks = array((int) $this->getState($this->getName() . '.id'));
 		}
 
-		return true;
+		// Check in all items.
+		foreach ($pks as $pk)
+		{
+			if ($this->load($pk))
+			{
+				// If there is no checked_out or checked_out_time field, just return true.
+				if (!$this->hasField('checked_out') || !$this->hasField('checked_out_time') || !($this->checked_out > 0))
+				{
+					$count++;
+				}
+				else
+				{
+
+					$user = \JFactory::getUser();
+
+					// Check if this is the user having previously checked out the row.
+					if ($this->checked_out > 0 && $this->checked_out != $user->get('id')
+						&& !$user->authorise('core.admin', 'com_checkin'))
+					{
+						// TODO throw better exception
+						throw new \Exception(\JText::_('JLIB_APPLICATION_ERROR_CHECKIN_USER_MISMATCH'));
+					}
+					else
+					{
+						$this->checked_out = '0';
+						$this->checked_out_time = $this->getDb()->getNullDate();
+
+						$this->persist();
+
+						$count++;
+					}
+				}
+			}
+			else
+			{
+				// TODO better exception
+				throw new \Exception("falied to load Entity");
+			}
+		}
+
+		return $count;
 	}
 
 	/**
@@ -159,23 +108,23 @@ abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwa
 	 * @return  boolean  False on failure or error, true otherwise.
 	 *
 	 * @since   1.6
+	 * @throws \Exception
 	 */
 	public function checkout($pk = null)
 	{
+		$pk = (!empty($pk)) ? $pk : (int) $this->getState($this->getName() . '.id');
+
 		// Only attempt to check the row in if it exists.
 		if ($pk)
 		{
-			if (!$this->entity->load($pk))
+			if (!$this->load($pk))
 			{
-				// TODO throw error here
-				// $this->setError($table->getError());
-				// throw new \UnexpectedValueException('Null primary key not allowed.');
-
-				return false;
+				// TODO better exception
+				throw new \Exception("falied to load Entity");
 			}
 
 			// If there is no checked_out or checked_out_time field, just return true.
-			if (!$this->entity->hasField('checked_out') || !$this->entity->hasField('checked_out_time'))
+			if (!$this->hasField('checked_out') || !$this->hasField('checked_out_time'))
 			{
 				return true;
 			}
@@ -183,44 +132,19 @@ abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwa
 			$user = \JFactory::getUser();
 
 			// Check if this is the user having previously checked out the row.
-			if ($this->entity->checked_out > 0 && $this->entity->checked_out != $user->get('id'))
+			if ($this->checked_out > 0 && $this->checked_out != $user->get('id'))
 			{
-				// TODO throw error here
-				// $this->setError(\JText::_('JLIB_APPLICATION_ERROR_CHECKOUT_USER_MISMATCH'));
-
-				return false;
+				// TODO better exception
+				throw new \Exception(\JText::_('JLIB_APPLICATION_ERROR_CHECKOUT_USER_MISMATCH'));
 			}
-
-			// Pre-processing by observers
-			$event = AbstractEvent::create(
-				'onTableBeforeCheckout',
-				array(
-					'subject'	=> $this,
-					'userId'	=> $user->get('id'),
-					'pk'		=> $pk,
-				)
-			);
-			$this->getDispatcher()->dispatch('onTableBeforeCheckout', $event);
 
 			// Get the current time in the database format.
 			$time = \JFactory::getDate()->toSql();
 
-			$this->entity->checked_out = (int) $user->get('id');
-			$this->entity->checked_out_time = $time;
+			$this->checked_out = (int) $user->get('id');
+			$this->checked_out_time = $time;
 
-			$this->entity->persist();
-
-			// Post-processing by observers
-			$event = AbstractEvent::create(
-				'onTableAfterCheckout',
-				array(
-					'subject'	=> $this,
-					'userId'	=> $user->get('id'),
-					'pk'		=> $pk,
-				)
-			);
-
-			$this->getDispatcher()->dispatch('onTableAfterCheckout', $event);
+			$this->persist();
 
 			return true;
 		}
@@ -238,7 +162,10 @@ abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwa
 	 *
 	 * @since   1.6
 	 */
-	abstract public function getForm($data = array(), $loadData = true);
+	public function getForm($data = array(), $loadData = true)
+	{
+		return false;
+	}
 
 	/**
 	 * Method to get a form object.
@@ -407,9 +334,6 @@ abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwa
 	 */
 	public function validate($form, $data, $group = null)
 	{
-		// Include the plugins for the delete events.
-		\JPluginHelper::importPlugin($this->events_map['validate']);
-
 		\JFactory::getApplication()->triggerEvent('onUserBeforeDataValidation', array($form, &$data));
 
 		// Filter and validate the form data.
@@ -419,28 +343,22 @@ abstract class FormEntityModel extends BaseEntityModel implements FormFactoryAwa
 		// Check for an error.
 		if ($return instanceof \Exception)
 		{
-			// TODO throw error here
-			// $this->setError($return->getMessage());
-
-			return false;
+			throw $return;
 		}
 
 		// Check the validation results.
 		if ($return === false)
 		{
+			$allMessages = '';
+
 			// Get the validation messages from the form.
 			foreach ($form->getErrors() as $message)
 			{
-				$this->setError($message);
+				$allMessages .= " " . $message;
 			}
 
-			return false;
-		}
-
-		// Tags B/C break at 3.1.2
-		if (!isset($data['tags']) && isset($data['metadata']['tags']))
-		{
-			$data['tags'] = $data['metadata']['tags'];
+			// TODO better exception
+			throw new \Exception($allMessages);
 		}
 
 		return $data;
