@@ -12,7 +12,9 @@ namespace Joomla\Component\Content\Administrator\Model;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Model\ListModel;
+use Joomla\CMS\Pagination\Pagination;
 use Joomla\Database\DatabaseDriver;
+use Joomla\Entity\Helpers\Collection;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -332,6 +334,47 @@ class ArticlesModel extends ArticleModel
 		parent::__construct($db);
 	}
 
+
+	/**
+	 * Gets the Articles Collection
+	 *
+	 * @return  Collection
+	 *
+	 * @since   1.6
+	 */
+	protected function getCollection()
+	{
+		$user  = \JFactory::getUser();
+
+		$columns = (isset($this->list['select'])) ? $this->list['select'] :
+			['id', 'title', 'alias', 'checked_out', 'checked_out_time', 'catid',
+			'state', 'access', 'created', 'created_by', 'created_by_alias', 'modified', 'ordering', 'featured', 'language', 'hits',
+			'publish_up', 'publish_down', 'introtext', '`fulltext`'];
+
+		$with = [];
+
+		$with[] = 'lang:lang_id,lang_code,title,image';
+
+		$with[] = 'editor:id,name';
+
+		$with[] = 'viewLevel:id,title';
+
+		$with[] = 'category:id,title';
+
+		$with[] = 'author:id,name';
+
+		// TODO voting
+
+		// TODO associations
+
+		// TODO Filter by access level.
+
+		// TODO Filter by access level on categories.
+
+		// TODO Filter by published state
+
+		return $this->with($with)->get($columns);
+	}
 	/**
 	 * Build an SQL query to load the list data.
 	 *
@@ -616,8 +659,7 @@ class ArticlesModel extends ArticleModel
 		if (!isset($this->cache[$store]))
 		{
 			// Load the list items and add the items to the internal cache.
-			$this->getDb()->setQuery($this->getListQuery(), $this->getStart(), $this->list['limit']);
-			$this->cache[$store] = $this->getDb()->loadObjectList();
+			$this->cache[$store] = $this->getCollection();
 		}
 
 		$items = $this->cache[$store];
@@ -838,7 +880,7 @@ class ArticlesModel extends ArticleModel
 		$limit = (int) $this->list['limit'] - (int) $this->list['links'];
 
 		// Create the pagination object and add the object to the internal cache.
-		$this->cache[$store] = new \JPagination($this->getTotal(), $this->getStart(), $limit);
+		$this->cache[$store] = new Pagination($this->getTotal(), $this->getStart(), $limit);
 
 		return $this->cache[$store];
 	}

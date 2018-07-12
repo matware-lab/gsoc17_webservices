@@ -9,7 +9,6 @@
 
 namespace Joomla\CMS\Entity;
 
-use Joomla\Entity\Model;
 use Joomla\Entity\Relations\Relation;
 
 defined('JPATH_PLATFORM') or die;
@@ -70,16 +69,52 @@ class Content extends CMSModel
 	 */
 	public function category()
 	{
-		return $this->belongsTo('Joomla\CMS\Entity\Category', 'catid');
+		return $this->belongsTo('Joomla\CMS\Entity\Category', 'category', 'catid');
 	}
 
 	/**
-	 * Get the featured for the current user.
+	 * Get the featured for the current article.
 	 * @return Relation
 	 */
 	public function feature()
 	{
-		return $this->hasOne('Joomla\CMS\Entity\Category\Featured');
+		return $this->hasOne('Joomla\CMS\Entity\Featured');
+	}
+
+	/**
+	 * Get the author for the current article.
+	 * @return Relation
+	 */
+	public function author()
+	{
+		return $this->belongsTo('Joomla\CMS\Entity\User', 'author', 'created_by');
+	}
+
+	/**
+	 * Get the author for the current article.
+	 * @return Relation
+	 */
+	public function editor()
+	{
+		return $this->hasOne('Joomla\CMS\Entity\User', 'id', 'checked_out');
+	}
+
+	/**
+	 * Get the featured for the current article.
+	 * @return Relation
+	 */
+	public function lang()
+	{
+		return $this->hasOne('Joomla\CMS\Entity\Language', 'lang_code', 'language');
+	}
+
+	/**
+	 * Get the view level for the current article.
+	 * @return Relation
+	 */
+	public function viewLevel()
+	{
+		return $this->hasOne('Joomla\CMS\Entity\ViewLevel', 'id', 'access');
 	}
 
 	/**

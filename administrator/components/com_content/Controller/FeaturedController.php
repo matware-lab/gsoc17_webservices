@@ -24,6 +24,7 @@ class FeaturedController extends ArticlesController
 	 * @return  void
 	 *
 	 * @since   1.6
+	 * @throws \Exception
 	 */
 	public function delete()
 	{
@@ -51,7 +52,7 @@ class FeaturedController extends ArticlesController
 		else
 		{
 			// Get the model.
-			/** @var \Joomla\Component\Content\Administrator\Model\FeatureModel $model */
+			/** @var \Joomla\Component\Content\Administrator\Model\FeaturedModel $model */
 			$model = $this->getModel();
 
 			// Remove the items.
@@ -89,7 +90,7 @@ class FeaturedController extends ArticlesController
 	 *
 	 * @since   1.6
 	 */
-	public function getModel($name = 'Feature', $prefix = 'Administrator', $config = array('ignore_request' => true))
+	public function getModel($name = 'Featured', $prefix = 'Administrator', $config = array('ignore_request' => true))
 	{
 		return parent::getModel($name, $prefix, $config);
 	}

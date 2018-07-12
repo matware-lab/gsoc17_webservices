@@ -70,12 +70,6 @@ class Category extends Model
 	 */
 	public function articles()
 	{
-		/** @todo I believe the related class does not need to be a Model with all the extra stuff in it,
-		 * but, just a plain Entity, therefore, we may consider splitting Models and Entities.
-		 * I don't know if loading larger objects has that much impact on performance, but it certainly has some.
-		 * Next, this CategoryModel certainly does not belong here, as I believe it is also used in other components.
-		 * Why not put it in the library?
-		 */
 		return $this->hasMany('Joomla\CMS\Entity\Content', 'catid');
 	}
 

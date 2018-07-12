@@ -1016,12 +1016,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/joomla-framework/database.git",
-                "reference": "be0ec4fd70d727b17ba9017c2ae03fc344a9f02c"
+                "reference": "c839698cafa48e209946e7e6df1f45da633f3d3a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joomla-framework/database/zipball/be0ec4fd70d727b17ba9017c2ae03fc344a9f02c",
-                "reference": "be0ec4fd70d727b17ba9017c2ae03fc344a9f02c",
+                "url": "https://api.github.com/repos/joomla-framework/database/zipball/c839698cafa48e209946e7e6df1f45da633f3d3a",
+                "reference": "c839698cafa48e209946e7e6df1f45da633f3d3a",
                 "shasum": ""
             },
             "require": {
@@ -1067,7 +1067,7 @@
                 "framework",
                 "joomla"
             ],
-            "time": "2018-06-02T02:43:07+00:00"
+            "time": "2018-06-23T18:53:33+00:00"
         },
         {
             "name": "joomla/di",
@@ -4268,12 +4268,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/joomla/test-system.git",
-                "reference": "472c69aad1db7fbad67b07311ced5a21336366e1"
+                "reference": "411704332c071d2cf857ffb58d3e36f9189c0df6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joomla/test-system/zipball/472c69aad1db7fbad67b07311ced5a21336366e1",
-                "reference": "472c69aad1db7fbad67b07311ced5a21336366e1",
+                "url": "https://api.github.com/repos/joomla/test-system/zipball/411704332c071d2cf857ffb58d3e36f9189c0df6",
+                "reference": "411704332c071d2cf857ffb58d3e36f9189c0df6",
                 "shasum": ""
             },
             "require": {
@@ -4294,7 +4294,7 @@
                 "cms",
                 "joomla"
             ],
-            "time": "2018-05-15T13:20:55+00:00"
+            "time": "2018-07-10T00:11:41+00:00"
         },
         {
             "name": "joomla/test-unit",
