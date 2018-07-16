@@ -375,244 +375,6 @@ class ArticlesModel extends ArticleModel
 
 		return $this->with($with)->get($columns);
 	}
-	/**
-	 * Build an SQL query to load the list data.
-	 *
-	 * @return  \JDatabaseQuery
-	 *
-	 * @since   1.6
-	 */
-	protected function getListQuery()
-	{
-		// Create a new query object.
-		$db    = $this->getDb();
-		$query = $db->getQuery(true);
-		$user  = \JFactory::getUser();
-
-		// Select the required fields from the table.
-		$query->select(
-			(isset($this->list['select'])) ? $this->list['select'] :
-				'DISTINCT a.id, a.title, a.alias, a.checked_out, a.checked_out_time, a.catid' .
-				', a.state, a.access, a.created, a.created_by, a.created_by_alias, a.modified, a.ordering, a.featured, a.language, a.hits' .
-				', a.publish_up, a.publish_down, a.introtext, a.fulltext'
-		);
-		$query->from('#__content AS a');
-
-		// Join over the language
-		$query->select('l.title AS language_title, l.image AS language_image')
-			->join('LEFT', $db->quoteName('#__languages') . ' AS l ON l.lang_code = a.language');
-
-		// Join over the users for the checked out user.
-		$query->select('uc.name AS editor')
-			->join('LEFT', '#__users AS uc ON uc.id=a.checked_out');
-
-		// Join over the asset groups.
-		$query->select('ag.title AS access_level')
-			->join('LEFT', '#__viewlevels AS ag ON ag.id = a.access');
-
-		// Join over the categories.
-		$query->select('c.title AS category_title')
-			->join('LEFT', '#__categories AS c ON c.id = a.catid');
-
-		// Join over the users for the author.
-		$query->select('ua.name AS author_name')
-			->join('LEFT', '#__users AS ua ON ua.id = a.created_by');
-
-		// Join on voting table
-		$associationsGroupBy = array(
-			'a.id',
-			'a.title',
-			'a.alias',
-			'a.checked_out',
-			'a.checked_out_time',
-			'a.state',
-			'a.access',
-			'a.created',
-			'a.created_by',
-			'a.created_by_alias',
-			'a.modified',
-			'a.ordering',
-			'a.featured',
-			'a.language',
-			'a.hits',
-			'a.publish_up',
-			'a.publish_down',
-			'a.catid',
-			'l.title',
-			'l.image',
-			'uc.name',
-			'ag.title',
-			'c.title',
-			'ua.name',
-		);
-
-		if (\JPluginHelper::isEnabled('content', 'vote'))
-		{
-			$query->select('COALESCE(NULLIF(ROUND(v.rating_sum  / v.rating_count, 0), 0), 0) AS rating, 
-					COALESCE(NULLIF(v.rating_count, 0), 0) as rating_count')
-				->join('LEFT', '#__content_rating AS v ON a.id = v.content_id');
-
-			array_push($associationsGroupBy, 'v.rating_sum', 'v.rating_count');
-		}
-
-		// Join over the associations.
-		if (\JLanguageAssociations::isEnabled())
-		{
-			$query->select('COUNT(asso2.id)>1 as association')
-				->join('LEFT', '#__associations AS asso ON asso.id = a.id AND asso.context=' . $db->quote('com_content.item'))
-				->join('LEFT', '#__associations AS asso2 ON asso2.key = asso.key')
-				->group($db->quoteName($associationsGroupBy));
-		}
-
-		// Filter by access level.
-		$access = $this->filter['access'];
-
-		if (is_numeric($access))
-		{
-			$query->where('a.access = ' . (int) $access);
-		}
-		elseif (is_array($access))
-		{
-			$access = ArrayHelper::toInteger($access);
-			$access = implode(',', $access);
-			$query->where('a.access IN (' . $access . ')');
-		}
-
-		// Filter by access level on categories.
-		if (!$user->authorise('core.admin'))
-		{
-			$groups = implode(',', $user->getAuthorisedViewLevels());
-			$query->where('a.access IN (' . $groups . ')');
-			$query->where('c.access IN (' . $groups . ')');
-		}
-
-		// Filter by published state
-		$published = (string) $this->filter['published'];
-
-		if (is_numeric($published))
-		{
-			$query->where('a.state = ' . (int) $published);
-		}
-		elseif ($published === '')
-		{
-			$query->where('(a.state = 0 OR a.state = 1)');
-		}
-
-		// Filter by categories and by level
-		$categoryId = (isset($this->filter['category_id'])) ? $this->filter['category_id'] : array();
-		$level = $this->filter['level'];
-
-		if (!is_array($categoryId))
-		{
-			$categoryId = $categoryId ? array($categoryId) : array();
-		}
-
-		// Case: Using both categories filter and by level filter
-		if (count($categoryId))
-		{
-			$categoryId = ArrayHelper::toInteger($categoryId);
-			$categoryTable = \JTable::getInstance('Category', 'JTable');
-			$subCatItemsWhere = array();
-
-			foreach ($categoryId as $filter_catid)
-			{
-				$categoryTable->load($filter_catid);
-				$subCatItemsWhere[] = '(' .
-					($level ? 'c.level <= ' . ((int) $level + (int) $categoryTable->level - 1) . ' AND ' : '') .
-					'c.lft >= ' . (int) $categoryTable->lft . ' AND ' .
-					'c.rgt <= ' . (int) $categoryTable->rgt . ')';
-			}
-
-			$query->where(implode(' OR ', $subCatItemsWhere));
-		}
-
-		// Case: Using only the by level filter
-		elseif ($level)
-		{
-			$query->where('c.level <= ' . (int) $level);
-		}
-
-		// Filter by author
-		$authorId = (isset($this->filter['author_id'])) ? $this->filter['author_id'] : null;
-
-		if (is_numeric($authorId))
-		{
-			$type = (isset($this->filter['author_id.include']) ? $this->filter['author_id.include'] : true) ? '= ' : '<>';
-			$query->where('a.created_by ' . $type . (int) $authorId);
-		}
-		elseif (is_array($authorId))
-		{
-			$authorId = ArrayHelper::toInteger($authorId);
-			$authorId = implode(',', $authorId);
-			$query->where('a.created_by IN (' . $authorId . ')');
-		}
-
-		// Filter by search in title.
-		$search = (isset($this->filter['search'])) ? $this->filter['search'] : null;
-
-		if (!empty($search))
-		{
-			if (stripos($search, 'id:') === 0)
-			{
-				$query->where('a.id = ' . (int) substr($search, 3));
-			}
-			elseif (stripos($search, 'author:') === 0)
-			{
-				$search = $db->quote('%' . $db->escape(substr($search, 7), true) . '%');
-				$query->where('(ua.name LIKE ' . $search . ' OR ua.username LIKE ' . $search . ')');
-			}
-			else
-			{
-				$search = $db->quote('%' . str_replace(' ', '%', $db->escape(trim($search), true) . '%'));
-				$query->where('(a.title LIKE ' . $search . ' OR a.alias LIKE ' . $search . ')');
-			}
-		}
-
-		// Filter on the language.
-		if ($language = $this->filter['language'])
-		{
-			$query->where('a.language = ' . $db->quote($language));
-		}
-
-		// Filter by a single or group of tags.
-		$hasTag = false;
-		$tagId  = $this->filter['tag'];
-
-		if (is_numeric($tagId))
-		{
-			$hasTag = true;
-
-			$query->where($db->quoteName('tagmap.tag_id') . ' = ' . (int) $tagId);
-		}
-		elseif (is_array($tagId))
-		{
-			$tagId = ArrayHelper::toInteger($tagId);
-			$tagId = implode(',', $tagId);
-
-			if (!empty($tagId))
-			{
-				$hasTag = true;
-
-				$query->where($db->quoteName('tagmap.tag_id') . ' IN (' . $tagId . ')');
-			}
-		}
-
-		if ($hasTag)
-		{
-			$query->join('LEFT', $db->quoteName('#__contentitem_tag_map', 'tagmap')
-				. ' ON ' . $db->quoteName('tagmap.content_item_id') . ' = ' . $db->quoteName('a.id')
-				. ' AND ' . $db->quoteName('tagmap.type_alias') . ' = ' . $db->quote('com_content.article')
-			);
-		}
-
-		// Add the list ordering clause.
-		$orderCol  = $this->list['ordering'];
-		$orderDirn = $this->list['direction'];
-
-		$query->order($db->escape($orderCol) . ' ' . $db->escape($orderDirn));
-
-		return $query;
-	}
 
 	/**
 	 * Build a list of authors
@@ -761,51 +523,33 @@ class ArticlesModel extends ArticleModel
 		}
 
 		// Load the total and add the total to the internal cache.
-		$this->cache[$store] = (int) $this->getListCount($this->getListQuery());
+		$this->cache[$store] = (int) $this->getCount();
 
 		return $this->cache[$store];
 	}
 
 	/**
-	 * Returns a record count for the query.
-	 *
-	 * @param   \JDatabaseQuery|string  $query  The query.
+	 * Returns the record count for the current filters.
 	 *
 	 * @return  integer  Number of rows for query.
 	 *
-	 * @since   3.0
+	 * @since   __DEPLOY_VERSION__
 	 */
-	protected function getListCount($query)
+	protected function getCount()
 	{
-		// Use fast COUNT(*) on \JDatabaseQuery objects if there is no GROUP BY or HAVING clause:
-		if ($query instanceof \JDatabaseQuery
-			&& $query->type == 'select'
-			&& $query->group === null
-			&& $query->merge === null
-			&& $query->querySet === null
-			&& $query->having === null)
+		// TODO filters
+
+		$groupBy = false;
+		$having = false;
+
+		if ($groupBy || $having)
 		{
-			$query = clone $query;
-			$query->clear('select')->clear('order')->clear('limit')->clear('offset')->select('COUNT(*)');
-
-			$this->getDb()->setQuery($query);
-
-			return (int) $this->getDb()->loadResult();
+			return $this->getCollection()->count();
 		}
-
-		// Otherwise fall back to inefficient way of counting all results.
-
-		// Remove the limit and offset part if it's a \JDatabaseQuery object
-		if ($query instanceof \JDatabaseQuery)
+		else
 		{
-			$query = clone $query;
-			$query->clear('limit')->clear('offset');
+			return $this->count();
 		}
-
-		$this->getDb()->setQuery($query);
-		$this->getDb()->execute();
-
-		return (int) $this->getDb()->getNumRows();
 	}
 
 	/**
