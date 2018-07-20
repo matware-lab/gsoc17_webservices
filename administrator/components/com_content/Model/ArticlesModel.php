@@ -11,7 +11,7 @@ namespace Joomla\Component\Content\Administrator\Model;
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\MVC\Model\ListModel;
+use Joomla\CMS\Entity\Category;
 use Joomla\CMS\Pagination\Pagination;
 use Joomla\Database\DatabaseDriver;
 use Joomla\Entity\Helpers\Collection;
@@ -49,7 +49,7 @@ class ArticlesModel extends ArticleModel
 	 * @var array
 	 */
 	protected $list = [
-		'ordering' => 'a.id',
+		'ordering' => 'id',
 		'direction' => 'DESC',
 		'links' => null,
 		'limit' => null,
@@ -79,7 +79,8 @@ class ArticlesModel extends ArticleModel
 		'publish_down' => null,
 		'published' => null,
 		'author_id' => null,
-		'category_id' => null,
+		'author_id.include' => true,
+		'category_id' => [],
 		'level' => null,
 		'tag' => null,
 		'rating_count' => null,
@@ -369,9 +370,168 @@ class ArticlesModel extends ArticleModel
 
 		// TODO Filter by access level.
 
-		// TODO Filter by access level on categories.
+		// Filter by access level.
+		$access = $this->filter['access'];
 
-		// TODO Filter by published state
+		if (is_numeric($access))
+		{
+			$this->where('access = ' . (int) $access);
+		}
+		elseif (is_array($access))
+		{
+			$access = ArrayHelper::toInteger($access);
+			$access = implode(',', $access);
+			$this->whereIn('access', $access);
+		}
+
+		// Filter by access level on categories.
+		if (!$user->authorise('core.admin'))
+		{
+			$groups = implode(',', $user->getAuthorisedViewLevels());
+			$this->whereIn('access', $groups);
+
+			$relation = 'category';
+			$column = $this->qualifyRelatedColumn($relation, 'access');
+			$this->filter($relation,
+				function ($query) use ($column, $groups)
+				{
+					$query->whereIn($column, $groups);
+				}
+			);
+		}
+
+		// Filter by published state
+		$published = (string) $this->filter['published'];
+
+		if (is_numeric($published))
+		{
+			$this->where('state = ' . (int) $published);
+		}
+		elseif ($published === '')
+		{
+			$this->where('(state = 0 OR state = 1)');
+		}
+
+		// Filter by categories and by level
+		$categoryId = $this->filter['category_id'];
+		$level = $this->filter['level'];
+
+		if (!is_array($categoryId))
+		{
+			$categoryId = $categoryId ? [$categoryId] : [];
+		}
+
+		// Case: Using both categories filter and by level filter
+		if (count($categoryId))
+		{
+			$categoryId = ArrayHelper::toInteger($categoryId);
+			$category = new Category($this->getDb());
+			$subCatItemsWhere = [];
+
+			$relation = 'category';
+			$levelColumn = $this->qualifyRelatedColumn($relation, 'level');
+			$lftColumn = $this->qualifyRelatedColumn($relation, 'lft');
+			$rghColumn = $this->qualifyRelatedColumn($relation, 'rgt');
+
+			foreach ($categoryId as $filterCatId)
+			{
+				$category->load($filterCatId, true);
+				$subCatItemsWhere[] = '(' .
+					($level ? "$levelColumn <= " . ((int) $level + (int) $category->level - 1) . ' AND ' : '') .
+					"$lftColumn >= " . (int) $category->lft . ' AND ' .
+					"$rghColumn <= " . (int) $category->rgt . ')';
+			}
+
+			$this->filter($relation,
+				function ($query) use ($subCatItemsWhere)
+				{
+					$query->where(implode(' OR ', $subCatItemsWhere));
+				}
+			);
+
+		}
+
+		// Case: Using only the by level filter
+		elseif ($level)
+		{
+			$relation = 'category';
+			$levelColumn = $this->qualifyRelatedColumn($relation, 'level');
+
+			$this->filter($relation,
+				function ($query) use ($levelColumn, $level)
+				{
+					$query->where("$levelColumn <= " . (int) $level);
+				}
+			);
+		}
+
+		// Filter by author
+		$authorId = $this->filter['author_id'];
+
+		if (is_numeric($authorId))
+		{
+			$type = $this->filter['author_id.include'] ? '= ' : '<>';
+			$this->where('created_by ' . $type . (int) $authorId);
+		}
+		elseif (is_array($authorId))
+		{
+			$authorId = ArrayHelper::toInteger($authorId);
+			$this->whereIn('created_by', $authorId);
+		}
+
+		// Filter by search in title.
+		$search = $this->filter['search'];
+
+		if (!empty($search))
+		{
+			if (stripos($search, 'id:') === 0)
+			{
+				$this->where('id = ' . (int) substr($search, 3));
+			}
+			elseif (stripos($search, 'author:') === 0)
+			{
+				$search = $this->getDb()->quote('%' . $this->getDb()->escape(substr($search, 7), true) . '%');
+
+				$relation = 'author';
+				$nameColumn = $this->qualifyRelatedColumn($relation, 'name');
+				$usernameColumn = $this->qualifyRelatedColumn($relation, 'username');
+
+				$this->filter($relation,
+					function ($query) use ($nameColumn, $usernameColumn, $search)
+					{
+						$query->where("($nameColumn LIKE $search OR $usernameColumn LIKE $search )");
+					}
+				);
+			}
+			else
+			{
+				$search = $this->getDb()->quote('%' . str_replace(' ', '%', $this->getDb()->escape(trim($search), true) . '%'));
+				$relation = 'author';
+				$titleColumn = $this->qualifyRelatedColumn($relation, 'title');
+				$aliasColumn = $this->qualifyRelatedColumn($relation, 'alias');
+
+				$this->filter($relation,
+					function ($query) use ($titleColumn, $aliasColumn, $search)
+					{
+						$query->where("($titleColumn LIKE $search OR $aliasColumn LIKE $search )");
+					}
+				);
+			}
+		}
+
+		// Filter on the language.
+		if ($language = $this->filter['language'])
+		{
+			$this->where('a.language = ' . $this->getDb()->quote($language));
+		}
+
+		// TODO Filter by a single or group of tags.
+
+		// Add the list ordering clause.
+		$orderCol  = $this->list['ordering'];
+		$orderDirn = $this->list['direction'];
+
+		$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDirn));
 
 		return $this->with($with)->get($columns);
 	}
