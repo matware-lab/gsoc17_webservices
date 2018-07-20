@@ -115,7 +115,6 @@ if ($saveOrder)
 						<tbody>
 						<?php $count = count($this->items); ?>
 						<?php foreach ($this->items as $i => $item) :
-							$item->max_ordering = 0;
 							$ordering   = ($listOrder == 'fp.ordering');
 							$assetId    = 'com_content.article.' . $item->id;
 							$canCreate  = $user->authorise('core.create', 'com_content.category.' . $item->catid);
@@ -169,12 +168,12 @@ if ($saveOrder)
 										<?php echo JText::sprintf('JGLOBAL_LIST_ALIAS', $this->escape($item->alias)); ?>
 									</span>
 										<div class="small">
-											<?php echo JText::_('JCATEGORY') . ': ' . $this->escape($item->category_title); ?>
+											<?php echo JText::_('JCATEGORY') . ': ' . $this->escape($item->category->title); ?>
 										</div>
 									</div>
 								</td>
 								<td class="small d-none d-md-table-cell text-center">
-									<?php echo $this->escape($item->access_level); ?>
+									<?php echo $this->escape($item->viewLevel->id); ?>
 								</td>
 								<td class="small d-none d-md-table-cell text-center">
 									<?php if ((int) $item->created_by != 0) : ?>
@@ -184,7 +183,7 @@ if ($saveOrder)
                                             <div class="smallsub"><?php echo JText::sprintf('JGLOBAL_LIST_ALIAS', $this->escape($item->created_by_alias)); ?></div>
 										<?php else : ?>
                                             <a class="hasTooltip" href="<?php echo JRoute::_('index.php?option=com_users&task=user.edit&id=' . (int) $item->created_by); ?>" title="<?php echo JText::_('JAUTHOR'); ?>">
-												<?php echo $this->escape($item->author_name); ?></a>
+												<?php echo $this->escape($item->author->name); ?></a>
 										<?php endif; ?>
 									<?php else : ?>
 										<?php if ($item->created_by_alias) : ?>
@@ -202,8 +201,8 @@ if ($saveOrder)
 								<?php endif; ?>
 								<td class="nowrap small d-none d-md-table-cell text-center">
 									<?php
-									$date = $item->{$orderingColumn};
-									echo $date > 0 ? JHtml::_('date', $date, JText::_('DATE_FORMAT_LC4')) : '-';
+                                        $date = $item->{$orderingColumn};
+                                        echo $date->format(JText::_('DATE_FORMAT_LC4'));
 									?>
 								</td>
 								<td class="d-none d-md-table-cell text-center">
