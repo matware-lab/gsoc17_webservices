@@ -341,10 +341,12 @@ class ArticlesModel extends ArticleModel
 	 *
 	 * @return  Collection
 	 *
-	 * @since   1.6
+	 * @since   __DEPLOY_VERSION__
 	 */
 	protected function getCollection()
 	{
+		$this->setAlias('c');
+
 		$user  = \JFactory::getUser();
 
 		$columns = (isset($this->list['select'])) ? $this->list['select'] :
@@ -367,8 +369,6 @@ class ArticlesModel extends ArticleModel
 		// TODO voting
 
 		// TODO associations
-
-		// TODO Filter by access level.
 
 		// Filter by access level.
 		$access = $this->filter['access'];
@@ -528,10 +528,10 @@ class ArticlesModel extends ArticleModel
 		// TODO Filter by a single or group of tags.
 
 		// Add the list ordering clause.
-		$orderCol  = $this->list['ordering'];
-		$orderDirn = $this->list['direction'];
+		$orderCol  = $this->qualifyColumn($this->list['ordering']);
+		$orderDim = $this->list['direction'];
 
-		$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDirn));
+		$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDim));
 
 		return $this->with($with)->get($columns);
 	}

@@ -9,6 +9,8 @@
 
 namespace Joomla\Component\Content\Administrator\Model;
 
+use Joomla\Entity\Helpers\Collection;
+
 defined('_JEXEC') or die;
 
 /**
@@ -18,5 +20,23 @@ defined('_JEXEC') or die;
  */
 class FeaturedModel extends ArticlesModel
 {
+	/**
+	 * Gets the Articles Collection
+	 *
+	 * @return  Collection
+	 *
+	 * @since   __DEPLOY_VERSION__
+	 */
+	protected function getCollection()
+	{
+		$column = $this->feature()->getRelated()->getQualifiedPrimaryKey();
+		$this->filter('feature',
+			function ($query) use ($column)
+			{
+				$query->where("$column IS NOT NULL");
+			}
+		);
 
+		return parent::getCollection();
+	}
 }
