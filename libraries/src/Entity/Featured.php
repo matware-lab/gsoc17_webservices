@@ -15,7 +15,7 @@ use Joomla\Entity\Relations\Relation;
 defined('JPATH_PLATFORM') or die;
 
 /**
- * Entity Model for a Category.
+ * Entity Model for a Featured Article.
  *
  * @since  __DEPLOY_VERSION__
  */

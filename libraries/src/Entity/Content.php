@@ -82,6 +82,15 @@ class Content extends CMSModel
 	}
 
 	/**
+	 * Get the voting for the current article.
+	 * @return Relation
+	 */
+	public function rating()
+	{
+		return $this->hasOne('Joomla\CMS\Entity\Rating');
+	}
+
+	/**
 	 * Get the author for the current article.
 	 * @return Relation
 	 */
