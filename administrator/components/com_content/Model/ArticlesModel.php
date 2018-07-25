@@ -368,11 +368,7 @@ class ArticlesModel extends ArticleModel
 
 		if (\JPluginHelper::isEnabled('content', 'vote'))
 		{
-			$query->select('COALESCE(NULLIF(ROUND(v.rating_sum  / v.rating_count, 0), 0), 0) AS rating, 
-					COALESCE(NULLIF(v.rating_count, 0), 0) as rating_count')
-				->join('LEFT', '#__content_rating AS v ON a.id = v.content_id');
-
-			array_push($associationsGroupBy, 'v.rating_sum', 'v.rating_count');
+			$with[] = 'rating:content_id,ratingSum,rating_count';
 		}
 
 		// TODO associations
