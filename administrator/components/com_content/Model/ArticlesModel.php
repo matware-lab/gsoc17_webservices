@@ -471,11 +471,12 @@ class ArticlesModel extends ArticleModel
 		// Filter by author
 		$authorId = $this->filter['author_id'];
 
-		$createdByColumn = $this->qualifyColumn('state');
+		$createdByColumn = $this->qualifyColumn('created_by');
 
 		if (is_numeric($authorId))
 		{
-			$type = $this->filter['author_id.include'] ? '= ' : '<>';
+			$type = $this->filter['author_id.include'] ? '=' : '<>';
+
 			$this->where($createdByColumn . ' ' . $type . (int) $authorId);
 		}
 		elseif (is_array($authorId))
