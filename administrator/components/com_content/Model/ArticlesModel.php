@@ -383,7 +383,6 @@ class ArticlesModel extends ArticleModel
 		elseif (is_array($access))
 		{
 			$access = ArrayHelper::toInteger($access);
-			$access = implode(',', $access);
 			$this->whereIn($this->qualifyColumn('access'), $access);
 		}
 
