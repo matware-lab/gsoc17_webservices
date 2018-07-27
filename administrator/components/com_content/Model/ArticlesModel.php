@@ -15,6 +15,7 @@ use Joomla\CMS\Entity\Category;
 use Joomla\CMS\Pagination\Pagination;
 use Joomla\Database\DatabaseDriver;
 use Joomla\Entity\Helpers\Collection;
+use Joomla\String\StringHelper;
 use Joomla\Utilities\ArrayHelper;
 
 /**
@@ -105,32 +106,27 @@ class ArticlesModel extends ArticleModel
 	 */
 	public function __construct($db)
 	{
-		$this->filterFields = array(
-				'id',
-				'title',
-				'alias',
-				'checked_out',
-				'checked_out_time',
-				'catid', 'category.title',
-				'state',
-				'access', 'viewLevel.id',
-				'created',
-				'modified',
-				'created_by',
-				'created_by_alias',
-				'ordering',
-				'featured',
-				'language',
-				'hits',
-				'publish_up',
-				'publish_down',
-				'published',
-				'author_id',
-				'category_id',
-				'level',
-				'tag',
-				'rating.rating_count', 'rating.rating',
-			);
+		$this->filterFields = [
+			'id', 'a.id',
+			'title', 'a.title',
+			'alias', 'a.alias',
+			'checked_out', 'a.checked_out',
+			'checked_out_time', 'a.checked_out_time',
+			'catid', 'a.catid', 'category.title',
+			'state', 'a.state',
+			'access', 'a.access',
+			'created', 'a.created',
+			'modified', 'a.modified',
+			'created_by', 'a.created_by',
+			'created_by_alias', 'a.created_by_alias',
+			'ordering', 'a.ordering',
+			'featured', 'a.featured',
+			'language', 'a.language',
+			'hits', 'a.hits',
+			'publish_up', 'a.publish_up',
+			'publish_down', 'a.publish_down',
+			'published', 'a.published',
+			];
 
 		if (\JLanguageAssociations::isEnabled())
 		{
@@ -202,6 +198,7 @@ class ArticlesModel extends ArticleModel
 				switch ($name)
 				{
 					case 'fullordering':
+
 						$orderingParts = explode(' ', $value);
 
 						if (count($orderingParts) >= 2)
@@ -239,6 +236,7 @@ class ArticlesModel extends ArticleModel
 							// Fallback to the default value
 							$value = $this->list['ordering'] . ' ' . $this->list['direction'];
 						}
+
 						break;
 
 					case 'ordering':
@@ -273,6 +271,7 @@ class ArticlesModel extends ArticleModel
 				}
 
 				$this->list[$name] = $value;
+
 			}
 		}
 		else
@@ -534,12 +533,23 @@ class ArticlesModel extends ArticleModel
 		// TODO Filter by a single or group of tags.
 
 		// Add the list ordering clause.
-		$orderCol  = $this->qualifyColumn($this->list['ordering']);
+		$orderCol  = (strpos($this->list['ordering'], '.') > 0) ? $this->list['ordering'] : $this->qualifyColumn($this->list['ordering']);
 		$orderDim = $this->list['direction'];
 
-		$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDim));
+		if (strpos($orderCol, 'a.'))
+		{
+			$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDim));
 
-		return $this->with($with)->get($columns);
+			return $this->with($with)->get($columns);
+		}
+		else
+		{
+			$collection = $this->with($with)->get($columns);
+
+			// TODO order collection based on relation
+
+			return $collection;
+		}
 	}
 
 	/**
