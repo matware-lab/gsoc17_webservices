@@ -106,30 +106,30 @@ class ArticlesModel extends ArticleModel
 	public function __construct($db)
 	{
 		$this->filterFields = array(
-				'id', 'a.id',
-				'title', 'a.title',
-				'alias', 'a.alias',
-				'checked_out', 'a.checked_out',
-				'checked_out_time', 'a.checked_out_time',
-				'catid', 'a.catid', 'category_title',
-				'state', 'a.state',
-				'access', 'a.access', 'access_level',
-				'created', 'a.created',
-				'modified', 'a.modified',
-				'created_by', 'a.created_by',
-				'created_by_alias', 'a.created_by_alias',
-				'ordering', 'a.ordering',
-				'featured', 'a.featured',
-				'language', 'a.language',
-				'hits', 'a.hits',
-				'publish_up', 'a.publish_up',
-				'publish_down', 'a.publish_down',
-				'published', 'a.published',
+				'id',
+				'title',
+				'alias',
+				'checked_out',
+				'checked_out_time',
+				'catid', 'category.title',
+				'state',
+				'access', 'viewLevel.id',
+				'created',
+				'modified',
+				'created_by',
+				'created_by_alias',
+				'ordering',
+				'featured',
+				'language',
+				'hits',
+				'publish_up',
+				'publish_down',
+				'published',
 				'author_id',
 				'category_id',
 				'level',
 				'tag',
-				'rating_count', 'rating',
+				'rating.rating_count', 'rating.rating',
 			);
 
 		if (\JLanguageAssociations::isEnabled())
@@ -378,20 +378,20 @@ class ArticlesModel extends ArticleModel
 
 		if (is_numeric($access))
 		{
-			$this->where('access = ' . (int) $access);
+			$this->where($this->qualifyColumn('access') . ' = ' . (int) $access);
 		}
 		elseif (is_array($access))
 		{
 			$access = ArrayHelper::toInteger($access);
 			$access = implode(',', $access);
-			$this->whereIn('access', $access);
+			$this->whereIn($this->qualifyColumn('access'), $access);
 		}
 
 		// Filter by access level on categories.
 		if (!$user->authorise('core.admin'))
 		{
 			$groups = implode(',', $user->getAuthorisedViewLevels());
-			$this->whereIn('access', $groups);
+			$this->whereIn($this->qualifyColumn('access'), $groups);
 
 			$relation = 'category';
 			$column = $this->qualifyRelatedColumn($relation, 'access');
@@ -405,14 +405,15 @@ class ArticlesModel extends ArticleModel
 
 		// Filter by published state
 		$published = (string) $this->filter['published'];
+		$stateColumn = $this->qualifyColumn('state');
 
 		if (is_numeric($published))
 		{
-			$this->where('state = ' . (int) $published);
+			$this->where($stateColumn . ' = ' . (int) $published);
 		}
 		elseif ($published === '')
 		{
-			$this->where('(state = 0 OR state = 1)');
+			$this->where("($stateColumn = 0 OR $stateColumn = 1)");
 		}
 
 		// Filter by categories and by level
@@ -471,15 +472,17 @@ class ArticlesModel extends ArticleModel
 		// Filter by author
 		$authorId = $this->filter['author_id'];
 
+		$createdByColumn = $this->qualifyColumn('state');
+
 		if (is_numeric($authorId))
 		{
 			$type = $this->filter['author_id.include'] ? '= ' : '<>';
-			$this->where('created_by ' . $type . (int) $authorId);
+			$this->where($createdByColumn . ' ' . $type . (int) $authorId);
 		}
 		elseif (is_array($authorId))
 		{
 			$authorId = ArrayHelper::toInteger($authorId);
-			$this->whereIn('created_by', $authorId);
+			$this->whereIn($createdByColumn, $authorId);
 		}
 
 		// Filter by search in title.
@@ -489,7 +492,7 @@ class ArticlesModel extends ArticleModel
 		{
 			if (stripos($search, 'id:') === 0)
 			{
-				$this->where('id = ' . (int) substr($search, 3));
+				$this->where($this->qualifyColumn('id') . ' = ' . (int) substr($search, 3));
 			}
 			elseif (stripos($search, 'author:') === 0)
 			{
@@ -525,7 +528,7 @@ class ArticlesModel extends ArticleModel
 		// Filter on the language.
 		if ($language = $this->filter['language'])
 		{
-			$this->where('a.language = ' . $this->getDb()->quote($language));
+			$this->where($this->qualifyColumn('language') . ' = ' . $this->getDb()->quote($language));
 		}
 
 		// TODO Filter by a single or group of tags.

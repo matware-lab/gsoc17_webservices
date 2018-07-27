@@ -29,6 +29,8 @@ class FeaturedModel extends ArticlesModel
 	 */
 	protected function getCollection()
 	{
+		$this->setAlias('c');
+
 		$column = $this->feature()->getRelated()->getQualifiedPrimaryKey();
 		$this->filter('feature',
 			function ($query) use ($column)
