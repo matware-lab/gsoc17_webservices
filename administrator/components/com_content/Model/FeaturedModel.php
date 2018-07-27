@@ -29,7 +29,7 @@ class FeaturedModel extends ArticlesModel
 	 */
 	protected function getCollection()
 	{
-		$this->setAlias('c');
+		$this->setAlias('a');
 
 		$column = $this->feature()->getRelated()->getQualifiedPrimaryKey();
 		$this->filter('feature',

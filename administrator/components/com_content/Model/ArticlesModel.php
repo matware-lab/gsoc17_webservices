@@ -345,7 +345,7 @@ class ArticlesModel extends ArticleModel
 	 */
 	protected function getCollection()
 	{
-		$this->setAlias('c');
+		$this->setAlias('a');
 
 		$user  = \JFactory::getUser();
 
