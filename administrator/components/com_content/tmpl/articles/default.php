@@ -193,7 +193,7 @@ $featuredButton = (new ActionButton(['tip_title' => 'JGLOBAL_TOGGLE_FEATURED']))
 									</div>
 								</td>
 								<td class="small d-none d-md-table-cell text-center">
-									<?php echo $this->escape($item->viewLevel->id); ?>
+									<?php echo $this->escape($item->viewLevel->title); ?>
 								</td>
 								<?php if ($assoc) : ?>
 								<td class="d-none d-md-table-cell text-center">
