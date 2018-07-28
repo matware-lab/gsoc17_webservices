@@ -33,6 +33,7 @@ $user = JFactory::getUser();
 	$cols = 0;
 	foreach ($this->modules as $module)
 	{
+	    // hack to fix loading page with new factory in com_content
 	    if ($module->id == '3' || $module->id == '4')
         {
             continue;
