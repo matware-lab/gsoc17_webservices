@@ -536,7 +536,7 @@ class ArticlesModel extends ArticleModel
 		$orderCol  = (strpos($this->list['ordering'], '.') > 0) ? $this->list['ordering'] : $this->qualifyColumn($this->list['ordering']);
 		$orderDim = $this->list['direction'];
 
-		if (strpos($orderCol, 'a.'))
+		if (strpos($orderCol, 'a.') === 0)
 		{
 			$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDim));
 
@@ -546,9 +546,7 @@ class ArticlesModel extends ArticleModel
 		{
 			$collection = $this->with($with)->get($columns);
 
-			// TODO order collection based on relation
-
-			return $collection;
+			return $collection->sortByOrdering($orderCol . ' ' . $orderDim);
 		}
 	}
 
@@ -808,13 +806,14 @@ class ArticlesModel extends ArticleModel
 	/**
 	 * Function to get the active filters
 	 *
-	 * @return  array  Associative array in the format: array('filter_published' => 0)
+	 * Associative array in the format: array('filter_published' => 0)
+	 * @return   array
 	 *
 	 * @since   3.2
 	 */
 	public function getActiveFilters()
 	{
-		$activeFilters = array();
+		$activeFilters = [];
 
 		if (!empty($this->filterFields))
 		{
