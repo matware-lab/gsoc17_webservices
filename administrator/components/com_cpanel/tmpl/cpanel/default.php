@@ -33,6 +33,10 @@ $user = JFactory::getUser();
 	$cols = 0;
 	foreach ($this->modules as $module)
 	{
+	    if ($module->id == '3' || $module->id == '4')
+        {
+            continue;
+        }
 		echo JModuleHelper::renderModule($module, array('style' => 'well'));
 	}
 	?>
