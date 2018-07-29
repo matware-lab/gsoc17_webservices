@@ -346,8 +346,6 @@ class ArticlesModel extends ArticleModel
 	{
 		$this->setAlias('a');
 
-		$user  = \JFactory::getUser();
-
 		$columns = (isset($this->list['select'])) ? $this->list['select'] :
 			['id', 'title', 'alias', 'checked_out', 'checked_out_time', 'catid',
 			'state', 'access', 'created', 'created_by', 'created_by_alias', 'modified', 'ordering', 'featured', 'language', 'hits',
@@ -370,7 +368,33 @@ class ArticlesModel extends ArticleModel
 			$with[] = 'rating:content_id,ratingSum,rating_count';
 		}
 
-		// TODO associations
+		$this->addFilters();
+
+		// Add the list ordering clause.
+		$orderCol  = (strpos($this->list['ordering'], '.') > 0) ? $this->list['ordering'] : $this->qualifyColumn($this->list['ordering']);
+		$orderDim = $this->list['direction'];
+
+		if (strpos($orderCol, 'a.') === 0)
+		{
+			$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDim));
+
+			return $this->with($with)->get($columns);
+		}
+		else
+		{
+			$collection = $this->with($with)->get($columns);
+
+			return $collection->sortByOrdering($orderCol . ' ' . $orderDim);
+		}
+	}
+
+	/**
+	 * Funtion to add filters fot the current query in getCollection
+	 * @return void
+	 */
+	public function addFilters()
+	{
+		$user  = \JFactory::getUser();
 
 		// Filter by access level.
 		$access = $this->filter['access'];
@@ -531,25 +555,7 @@ class ArticlesModel extends ArticleModel
 		}
 
 		// TODO Filter by a single or group of tags.
-
-		// Add the list ordering clause.
-		$orderCol  = (strpos($this->list['ordering'], '.') > 0) ? $this->list['ordering'] : $this->qualifyColumn($this->list['ordering']);
-		$orderDim = $this->list['direction'];
-
-		if (strpos($orderCol, 'a.') === 0)
-		{
-			$this->order($this->getDb()->escape($orderCol) . ' ' . $this->getDb()->escape($orderDim));
-
-			return $this->with($with)->get($columns);
-		}
-		else
-		{
-			$collection = $this->with($with)->get($columns);
-
-			return $collection->sortByOrdering($orderCol . ' ' . $orderDim);
-		}
 	}
-
 	/**
 	 * Build a list of authors
 	 *
