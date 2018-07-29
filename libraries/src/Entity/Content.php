@@ -148,4 +148,44 @@ class Content extends CMSModel
 		$this->introtext = $value[0];
 		$this->fulltext = (array_key_exists(1, $value)) ? $value[1] : '';
 	}
+
+	/**
+	 * Mutation for association
+	 * @return boolean
+	 * @todo this needs refactoring
+	 */
+	public function getAssociationAttribute()
+	{
+		// Cannot group by on relations!
+		$associationsGroupBy = [
+			'a.id',
+			'a.title',
+			'a.alias',
+			'a.checked_out',
+			'a.checked_out_time',
+			'a.state',
+			'a.access',
+			'a.created',
+			'a.created_by',
+			'a.created_by_alias',
+			'a.modified',
+			'a.ordering',
+			'a.featured',
+			'a.language',
+			'a.hits',
+			'a.publish_up',
+			'a.publish_down',
+			'a.catid'
+		];
+
+		$query = $this->db->getQuery(true);
+
+		$query->select('COUNT(asso2.id)>1 as association')
+			->from("#__content as a")
+			->join('LEFT', '#__associations AS asso ON asso.id = a.id AND asso.context=' . $this->getDb()->quote('com_content.item'))
+			->join('LEFT', '#__associations AS asso2 ON asso2.key = asso.key')
+			->group($this->getDb()->quoteName($associationsGroupBy));
+
+		return $this->db->setQuery($query)->loadResult();
+	}
 }
