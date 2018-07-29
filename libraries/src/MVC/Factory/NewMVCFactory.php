@@ -55,6 +55,7 @@ class NewMVCFactory implements MVCFactoryInterface, FormFactoryAwareInterface
 	 *
 	 * @param   string                   $namespace    The namespace
 	 * @param   CMSApplicationInterface  $application  The application
+	 * @param   DatabaseDriver           $db           The database driver
 	 *
 	 * @since   4.0.0
 	 */

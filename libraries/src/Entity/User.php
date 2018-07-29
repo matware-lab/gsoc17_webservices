@@ -59,6 +59,7 @@ class User extends Model
 
 	/**
 	 * Get the articles from the current category.
+	 *
 	 * @return Relation
 	 */
 	public function articles()

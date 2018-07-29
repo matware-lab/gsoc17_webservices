@@ -53,6 +53,7 @@ class Rating extends Model
 
 	/**
 	 * Get the articles from the current category.
+	 *
 	 * @return Relation
 	 */
 	public function article()
@@ -62,6 +63,7 @@ class Rating extends Model
 
 	/**
 	 * Mutation for rating
+	 *
 	 * @return mixed|string
 	 */
 	public function getRating()

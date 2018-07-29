@@ -390,6 +390,7 @@ class ArticlesModel extends ArticleModel
 
 	/**
 	 * Funtion to add filters fot the current query in getCollection
+	 *
 	 * @return void
 	 */
 	public function addFilters()
@@ -417,7 +418,8 @@ class ArticlesModel extends ArticleModel
 
 			$relation = 'category';
 			$column = $this->qualifyRelatedColumn($relation, 'access');
-			$this->filter($relation,
+			$this->filter(
+				$relation,
 				function ($query) use ($column, $groups)
 				{
 					$query->whereIn($column, $groups);
@@ -468,7 +470,8 @@ class ArticlesModel extends ArticleModel
 					"$rghColumn <= " . (int) $category->rgt . ')';
 			}
 
-			$this->filter($relation,
+			$this->filter(
+				$relation,
 				function ($query) use ($subCatItemsWhere)
 				{
 					$query->where(implode(' OR ', $subCatItemsWhere));
@@ -483,7 +486,8 @@ class ArticlesModel extends ArticleModel
 			$relation = 'category';
 			$levelColumn = $this->qualifyRelatedColumn($relation, 'level');
 
-			$this->filter($relation,
+			$this->filter(
+				$relation,
 				function ($query) use ($levelColumn, $level)
 				{
 					$query->where("$levelColumn <= " . (int) $level);
@@ -525,7 +529,8 @@ class ArticlesModel extends ArticleModel
 				$nameColumn = $this->qualifyRelatedColumn($relation, 'name');
 				$usernameColumn = $this->qualifyRelatedColumn($relation, 'username');
 
-				$this->filter($relation,
+				$this->filter(
+					$relation,
 					function ($query) use ($nameColumn, $usernameColumn, $search)
 					{
 						$query->where("($nameColumn LIKE $search OR $usernameColumn LIKE $search )");
@@ -733,6 +738,8 @@ class ArticlesModel extends ArticleModel
 	}
 
 	/**
+	 * Getter for list
+	 *
 	 * @return array
 	 */
 	public function getList()
@@ -741,6 +748,8 @@ class ArticlesModel extends ArticleModel
 	}
 
 	/**
+	 * Getter for filter
+	 *
 	 * @return array
 	 */
 	public function getFilter()
@@ -813,6 +822,7 @@ class ArticlesModel extends ArticleModel
 	 * Function to get the active filters
 	 *
 	 * Associative array in the format: array('filter_published' => 0)
+	 *
 	 * @return   array
 	 *
 	 * @since   3.2

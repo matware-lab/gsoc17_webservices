@@ -24,9 +24,9 @@ use Joomla\Entity\Model;
 /**
  * Class CMSModel used to extend the Entity Model
  *
- * @package Joomla\CMS\Entity
+ * @package  Joomla\CMS\Entity
  *
- * @since  __DEPLOY_VERSION__
+ * @since    __DEPLOY_VERSION__
  */
 class CMSModel extends Model
 {
@@ -160,6 +160,7 @@ class CMSModel extends Model
 	 * @param   mixed   $value  attribute value
 	 *
 	 * @return boolean
+	 *
 	 * @deprecated
 	 */
 	public function set($key, $value)
@@ -183,6 +184,7 @@ class CMSModel extends Model
 	 * @param   boolean  $toString  .
 	 *
 	 * @return  string   .
+	 *
 	 * @deprecated
 	 */
 	public function getError($i = null, $toString = true)
@@ -194,6 +196,7 @@ class CMSModel extends Model
 	 * Backwards compatibility in controllers
 	 *
 	 * @return  array  .
+	 *
 	 * @deprecated
 	 */
 	public function getErrors()
@@ -237,6 +240,7 @@ class CMSModel extends Model
 	 * Method for backwards compatibility
 	 *
 	 * @return Model
+	 *
 	 * @deprecated
 	 */
 	public function getTable()
@@ -245,6 +249,8 @@ class CMSModel extends Model
 	}
 
 	/**
+	 * Getter for componentParams
+	 *
 	 * @return mixed
 	 */
 	public function getComponentParams()

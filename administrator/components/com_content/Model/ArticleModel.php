@@ -240,7 +240,7 @@ class ArticleModel extends Content
 	/**
 	 * Method to validate the form data.
 	 *
-	 * @param   Form   $form   The form to validate against.
+	 * @param   Form    $form   The form to validate against.
 	 * @param   array   $data   The data to validate.
 	 * @param   string  $group  The name of the field group to validate.
 	 *
@@ -273,8 +273,9 @@ class ArticleModel extends Content
 	/**
 	 * Method to save the form data.
 	 *
-	 * @param   array $data      The form data.
-	 * @param   array $relations The relations associated with this entity. (Just for inheritance compatibility)
+	 * @param   array  $data       The form data.
+	 * @param   array  $relations  The relations associated with this entity. (Just for inheritance compatibility)
+	 *
 	 * @return  boolean  True on success.
 	 *
 	 * @since   1.6
@@ -401,10 +402,11 @@ class ArticleModel extends Content
 	/**
 	 * Method to toggle the featured setting of articles.
 	 *
-	 * @param   array   $pks   The ids of the items to toggle.
-	 * @param   integer $value The value to toggle to.
+	 * @param   array    $pks    The ids of the items to toggle.
+	 * @param   integer  $value  The value to toggle to.
 	 *
 	 * @return  boolean  True on success.
+	 *
 	 * @throws \Exception
 	 */
 	public function featured($pks, $value = 0)
@@ -494,13 +496,14 @@ class ArticleModel extends Content
 	/**
 	 * Allows preprocessing of the Form object.
 	 *
-	 * @param   Form   $form  The form object
-	 * @param   array  $data  The data to be merged into the form object
-	 * @param   string $group The plugin group to be executed
+	 * @param   Form    $form   The form object
+	 * @param   array   $data   The data to be merged into the form object
+	 * @param   string  $group  The plugin group to be executed
 	 *
 	 * @return  void
 	 *
 	 * @since   3.0
+	 *
 	 * @throws \Exception
 	 */
 	protected function preprocessForm(Form $form, $data, $group = 'content')
@@ -593,7 +596,7 @@ class ArticleModel extends Content
 	/**
 	 * Delete #__content_frontpage items if the deleted articles was featured
 	 *
-	 * @param   array  $pks  The primary key related to the contents that was deleted.
+	 * @param   array  &$pks  The primary key related to the contents that was deleted.
 	 *
 	 * @return  boolean
 	 *

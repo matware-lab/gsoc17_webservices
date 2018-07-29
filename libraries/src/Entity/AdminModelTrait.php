@@ -52,7 +52,7 @@ trait AdminModelTrait
 	/**
 	 * Method to delete one or more records.
 	 *
-	 * @param   array  $pks  An array of record primary keys.
+	 * @param   array  &$pks  An array of record primary keys.
 	 *
 	 * @return  boolean  True if successful, false if an error occurs.
 	 *
@@ -108,7 +108,7 @@ trait AdminModelTrait
 	/**
 	 * Method to get a single record.
 	 *
-	 * @param   integer $pk The id of the primary key.
+	 * @param   integer  $pk  The id of the primary key.
 	 *
 	 * @return  Model|boolean  Object on success, false on failure.
 	 *
@@ -117,7 +117,7 @@ trait AdminModelTrait
 	 */
 	public function getItem($pk = null)
 	{
-		 $pk = (!empty($pk)) ? $pk : (int) $this->getPrimaryKeyValue();
+		$pk = (!empty($pk)) ? $pk : (int) $this->getPrimaryKeyValue();
 
 		if ($pk > 0)
 		{
@@ -312,8 +312,8 @@ trait AdminModelTrait
 	/**
 	 * Method to save the form data.
 	 *
-	 * @param   array $data      The form data.
-	 * @param   array $relations The relations associated with this entity.
+	 * @param   array  $data       The form data.
+	 * @param   array  $relations  The relations associated with this entity.
 	 *
 	 * @return  boolean  True on success, False on error.
 	 *
@@ -388,10 +388,10 @@ trait AdminModelTrait
 	/**
 	 * Method to change the title & alias.
 	 *
-	 * @param   integer         $category_id  The id of the category.
-	 * @param   string          $alias        The alias.
-	 * @param   string          $title        The title.
-	 * @param   boolean/array   $rows         False if query needs to be done, array of results otherwise.
+	 * @param   integer        $category_id  The id of the category.
+	 * @param   string         $alias        The alias.
+	 * @param   string         $title        The title.
+	 * @param   boolean/array  $rows         False if query needs to be done, array of results otherwise.
 	 *
 	 * @return	array  Contains the modified title and alias.
 	 *
@@ -415,7 +415,7 @@ trait AdminModelTrait
 	/**
 	 * Method to check is the current Model has checking support
 	 *
-	 * return boolean
+	 * @return boolean
 	 */
 	protected function hasCheckin()
 	{

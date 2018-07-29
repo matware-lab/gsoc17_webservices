@@ -65,6 +65,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the category for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function category()
@@ -74,6 +75,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the featured for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function feature()
@@ -83,6 +85,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the voting for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function rating()
@@ -92,6 +95,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the author for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function author()
@@ -101,6 +105,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the author for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function editor()
@@ -110,6 +115,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the featured for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function lang()
@@ -119,6 +125,7 @@ class Content extends CMSModel
 
 	/**
 	 * Get the view level for the current article.
+	 *
 	 * @return Relation
 	 */
 	public function viewLevel()
@@ -128,6 +135,7 @@ class Content extends CMSModel
 
 	/**
 	 * Mutation for articletext
+	 *
 	 * @return mixed|string
 	 */
 	public function getArticletextAttribute()
@@ -139,6 +147,7 @@ class Content extends CMSModel
 	 * Mutation for articletext
 	 *
 	 * @param   string  $value  intotext + fulltext
+	 *
 	 * @return void
 	 */
 	public function setArticletextAttribute($value)
@@ -151,7 +160,9 @@ class Content extends CMSModel
 
 	/**
 	 * Mutation for association
+	 *
 	 * @return boolean
+	 *
 	 * @todo this needs refactoring
 	 */
 	public function getAssociationAttribute()
