@@ -544,7 +544,8 @@ class ArticlesModel extends ArticleModel
 				$titleColumn = $this->qualifyRelatedColumn($relation, 'title');
 				$aliasColumn = $this->qualifyRelatedColumn($relation, 'alias');
 
-				$this->filter($relation,
+				$this->filter(
+					$relation,
 					function ($query) use ($titleColumn, $aliasColumn, $search)
 					{
 						$query->where("($titleColumn LIKE $search OR $aliasColumn LIKE $search )");
