@@ -361,6 +361,7 @@ return array(
     'Joomla\\CMS\\Entity\\EntityTableTrait' => $baseDir . '/libraries/src/Entity/EntityTableTrait.php',
     'Joomla\\CMS\\Entity\\Featured' => $baseDir . '/libraries/src/Entity/Featured.php',
     'Joomla\\CMS\\Entity\\Language' => $baseDir . '/libraries/src/Entity/Language.php',
+    'Joomla\\CMS\\Entity\\Rating' => $baseDir . '/libraries/src/Entity/Rating.php',
     'Joomla\\CMS\\Entity\\User' => $baseDir . '/libraries/src/Entity/User.php',
     'Joomla\\CMS\\Entity\\ViewLevel' => $baseDir . '/libraries/src/Entity/ViewLevel.php',
     'Joomla\\CMS\\Environment\\Browser' => $baseDir . '/libraries/src/Environment/Browser.php',

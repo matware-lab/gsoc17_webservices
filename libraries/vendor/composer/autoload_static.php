@@ -705,6 +705,7 @@ class ComposerStaticInitb3f90d0e0764a1ad25163726533579c0
         'Joomla\\CMS\\Entity\\EntityTableTrait' => __DIR__ . '/../../..' . '/libraries/src/Entity/EntityTableTrait.php',
         'Joomla\\CMS\\Entity\\Featured' => __DIR__ . '/../../..' . '/libraries/src/Entity/Featured.php',
         'Joomla\\CMS\\Entity\\Language' => __DIR__ . '/../../..' . '/libraries/src/Entity/Language.php',
+        'Joomla\\CMS\\Entity\\Rating' => __DIR__ . '/../../..' . '/libraries/src/Entity/Rating.php',
         'Joomla\\CMS\\Entity\\User' => __DIR__ . '/../../..' . '/libraries/src/Entity/User.php',
         'Joomla\\CMS\\Entity\\ViewLevel' => __DIR__ . '/../../..' . '/libraries/src/Entity/ViewLevel.php',
         'Joomla\\CMS\\Environment\\Browser' => __DIR__ . '/../../..' . '/libraries/src/Environment/Browser.php',
